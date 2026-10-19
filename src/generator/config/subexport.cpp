@@ -856,22 +856,28 @@ std::string formatterShortId(std::string input) {
     size_t startPos = input.find(target);
 
     while (startPos != std::string::npos) {
-        // 查找对应实例的结束位置
-        size_t endPos = input.find("}", startPos);
+        size_t valueStart = startPos + target.length();
 
-        if (endPos != std::string::npos) {
-            // 提取原始id
-            std::string originalId = input.substr(startPos + target.length(), endPos - startPos - target.length());
-
-            // 去除原始id中的空格
-            originalId.erase(remove_if(originalId.begin(), originalId.end(), ::isspace), originalId.end());
-
-            // 添加引号
-            std::string modifiedId = " \"" + originalId + "\" ";
-
-            // 替换原始id为修改后的id
-            input.replace(startPos + target.length(), endPos - startPos - target.length(), modifiedId);
+        // short-id 的值以逗号、右花括号或换行结束，避免把后续字段（如 support-x25519mlkem768）一并吞进引号里
+        size_t valueEnd = input.size();
+        for (char delim : {',', '}', '\n', '\r'}) {
+            size_t pos = input.find(delim, valueStart);
+            if (pos != std::string::npos && pos < valueEnd) {
+                valueEnd = pos;
+            }
         }
+
+        // 提取原始id
+        std::string originalId = input.substr(valueStart, valueEnd - valueStart);
+
+        // 去除原始id中的空格
+        originalId.erase(remove_if(originalId.begin(), originalId.end(), ::isspace), originalId.end());
+
+        // 添加引号
+        std::string modifiedId = " \"" + originalId + "\"";
+
+        // 替换原始id为修改后的id
+        input.replace(valueStart, valueEnd - valueStart, modifiedId);
 
         // 继续查找下一个实例
         startPos = input.find(target, startPos + 1);
