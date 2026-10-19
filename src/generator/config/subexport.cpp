@@ -667,6 +667,9 @@ proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGroupCo
                 if (!x.ShortId.empty()) {
                     singleproxy["reality-opts"]["short-id"] = "" + x.ShortId;
                 }
+                if (!x.SupportX25519MLKEM768.is_undef()) {
+                    singleproxy["reality-opts"]["support-x25519mlkem768"] = x.SupportX25519MLKEM768.get();
+                }
                 if (!x.PublicKey.empty() || x.Flow == "xtls-rprx-vision") {
                     singleproxy["client-fingerprint"] = "chrome";
                 }
@@ -1396,6 +1399,10 @@ std::string proxyToSingle(std::vector<Proxy> &nodes, int types, extra_settings &
                 }
                 if (!sid.empty()) {
                     proxyStr += "&sid=" + sid;
+                }
+                if (!x.SupportX25519MLKEM768.is_undef()) {
+                    proxyStr += "&support-x25519mlkem768=" +
+                                std::string(x.SupportX25519MLKEM768.get() ? "true" : "false");
                 }
                 if (!fp.empty()) {
                     proxyStr += "&fp=" + fp;

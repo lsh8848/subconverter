@@ -150,6 +150,7 @@ struct Proxy {
     String Multiplexing;
     tribool V2rayHttpUpgrade;
     StringMap XHTTPOptions;
+    tribool SupportX25519MLKEM768;
 };
 
 #define SS_DEFAULT_GROUP "SSProvider"
