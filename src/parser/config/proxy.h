@@ -150,6 +150,7 @@ struct Proxy {
     String Multiplexing;
     tribool V2rayHttpUpgrade;
     StringMap XHTTPOptions;
+    StringMap XHTTPReuseSettings;
     tribool SupportX25519MLKEM768;
 };
 

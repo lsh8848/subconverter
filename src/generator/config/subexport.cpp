@@ -730,6 +730,10 @@ proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGroupCo
                         for (const auto &option: x.XHTTPOptions) {
                             singleproxy["xhttp-opts"][option.first] = yamlScalarFromString(option.second);
                         }
+                        for (const auto &setting: x.XHTTPReuseSettings) {
+                            // reuse-settings 需要字符串形式的数值/区间，不能转成整型
+                            singleproxy["xhttp-opts"]["reuse-settings"][setting.first] = setting.second;
+                        }
                         if (!x.Edge.empty())
                             singleproxy["xhttp-opts"]["headers"]["Edge"] = x.Edge;
                         break;

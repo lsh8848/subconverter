@@ -64,6 +64,20 @@ bool isXHTTPOptionKey(const std::string &key) {
     return std::find(xhttp_option_keys.begin(), xhttp_option_keys.end(), key) != xhttp_option_keys.end();
 }
 
+const string_array xhttp_reuse_setting_keys = {
+    "max-connections",
+    "max-concurrency",
+    "c-max-reuse-times",
+    "h-max-request-times",
+    "h-max-reusable-secs",
+    "h-keep-alive-period"
+};
+
+bool isXHTTPReuseSettingKey(const std::string &key) {
+    return std::find(xhttp_reuse_setting_keys.begin(), xhttp_reuse_setting_keys.end(), key) !=
+           xhttp_reuse_setting_keys.end();
+}
+
 std::string normalizeXHTTPOptionKey(std::string key) {
     std::string result;
     for (size_t i = 0; i < key.size(); i++) {
@@ -114,6 +128,16 @@ void readXHTTPExtraOptions(const std::string &addition, Proxy &node) {
 
     for (auto item = json.MemberBegin(); item != json.MemberEnd(); ++item) {
         std::string key = normalizeXHTTPOptionKey(item->name.GetString());
+        if ((key == "xmux" || key == "reuse-settings") && item->value.IsObject()) {
+            // Xray 的 xmux 复用参数，对应 mihomo 的 xhttp-opts.reuse-settings
+            for (auto sub = item->value.MemberBegin(); sub != item->value.MemberEnd(); ++sub) {
+                std::string subkey = normalizeXHTTPOptionKey(sub->name.GetString());
+                std::string subvalue = jsonScalarToString(sub->value);
+                if (isXHTTPReuseSettingKey(subkey) && !subvalue.empty())
+                    node.XHTTPReuseSettings[subkey] = subvalue;
+            }
+            continue;
+        }
         std::string value = jsonScalarToString(item->value);
         if (isXHTTPOptionKey(key) && !value.empty())
             node.XHTTPOptions[key] = value;
@@ -1589,6 +1613,12 @@ void explodeClash(Node yamlnode, std::vector<Proxy> &nodes) {
                             for (const auto &key: xhttp_option_keys) {
                                 if (singleproxy["xhttp-opts"][key].IsScalar()) {
                                     node.XHTTPOptions[key] = safe_as<std::string>(singleproxy["xhttp-opts"][key]);
+                                }
+                            }
+                            for (const auto &key: xhttp_reuse_setting_keys) {
+                                if (singleproxy["xhttp-opts"]["reuse-settings"][key].IsScalar()) {
+                                    node.XHTTPReuseSettings[key] =
+                                            safe_as<std::string>(singleproxy["xhttp-opts"]["reuse-settings"][key]);
                                 }
                             }
                         }
